@@ -45,7 +45,7 @@ class FastDetector:
                 "text-classification",
                 model=self.model_name,
                 device=0 if "cuda" in self.device else -1,
-                return_all_scores=True
+                top_k=None
             )
             print(f"Loaded fast detector pipeline: {self.model_name}")
         except Exception as e:

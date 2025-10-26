@@ -144,7 +144,7 @@ class SentimentAnalyzer:
         self.sentiment_pipeline = pipeline(
             "sentiment-analysis",
             model=model_name,
-            return_all_scores=True
+            top_k=None
         )
     
     def analyze_sentiment(self, text: str) -> Dict[str, float]:
