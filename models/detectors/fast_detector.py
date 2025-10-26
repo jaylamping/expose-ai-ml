@@ -2,10 +2,14 @@
 Fast screening model for bot detection using lightweight transformers.
 """
 import torch
+import warnings
 import numpy as np
 from typing import List, Dict, Optional, Union
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import time
+
+# Suppress sentencepiece tokenizer conversion warning
+warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
 from pathlib import Path
 
 from config.settings import settings

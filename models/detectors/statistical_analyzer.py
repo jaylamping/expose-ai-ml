@@ -2,8 +2,12 @@
 Statistical analysis components for bot detection including perplexity, BPC, and linguistic features.
 """
 import time
+import warnings
 import numpy as np
 from typing import List, Dict, Optional, Union
+
+# Suppress sentencepiece tokenizer conversion warning
+warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
 
 from config.settings import settings
 from utils.preprocessing import RedditPreprocessor

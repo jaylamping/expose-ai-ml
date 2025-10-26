@@ -3,11 +3,15 @@ Unit and integration tests for bot detection system.
 """
 import sys
 import os
+import warnings
 from pathlib import Path
 
 # Add project root to Python path when not running via pytest
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+
+# Suppress sentencepiece tokenizer conversion warning
+warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
 
 import pytest
 import numpy as np

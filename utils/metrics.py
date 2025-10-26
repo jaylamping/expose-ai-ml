@@ -2,10 +2,14 @@
 Statistical metrics for bot detection including perplexity and BPC calculations.
 """
 import math
+import warnings
 import numpy as np
 from typing import List, Dict, Optional
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline  # pyright: ignore[reportMissingImports]
+
+# Suppress sentencepiece tokenizer conversion warning
+warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
 from sentence_transformers import SentenceTransformer  # pyright: ignore[reportMissingImports]
 import textstat  # pyright: ignore[reportMissingImports]
 from core.device_manager import DeviceManager
@@ -215,7 +219,10 @@ class EmbeddingSimilarityAnalyzer:
         Args:
             model_name: Sentence transformer model to use
         """
-        self.model = SentenceTransformer(model_name)
+        # Suppress sentencepiece warnings during model loading
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
+            self.model = SentenceTransformer(model_name)
     
     def calculate_embeddings(self, texts: List[str]) -> np.ndarray:
         """
