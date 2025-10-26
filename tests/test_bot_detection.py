@@ -1,6 +1,14 @@
 """
 Unit and integration tests for bot detection system.
 """
+import sys
+import os
+from pathlib import Path
+
+# Add project root to Python path when not running via pytest
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 import pytest
 import numpy as np
 import asyncio
@@ -188,15 +196,27 @@ class TestEnsembleScorer:
     
     def test_combine_fast_and_deep(self):
         """Test combining fast and deep model scores."""
-        fast_scores = [0.8, 0.6, 0.9]
-        deep_scores = [0.7, 0.5, 0.8]
+        # Create AnalysisResult objects
+        fast_result = AnalysisResult(
+            stage="fast",
+            bot_score=80.0,
+            confidence=85.0,
+            processing_time_ms=50.0
+        )
+        deep_result = AnalysisResult(
+            stage="deep", 
+            bot_score=70.0,
+            confidence=90.0,
+            processing_time_ms=200.0
+        )
         
-        result = self.scorer.combine_fast_and_deep(fast_scores, deep_scores)
+        result = self.scorer.combine_fast_and_deep(fast_result, deep_result)
         
         assert isinstance(result, dict)
-        assert 'fast_score' in result
-        assert 'deep_score' in result
-        assert 'combined_score' in result
+        assert 'bot_score' in result
+        assert 'confidence' in result
+        assert 'stage' in result
+        assert 'breakdown' in result
     
     def test_calculate_ensemble_score(self):
         """Test ensemble score calculation."""

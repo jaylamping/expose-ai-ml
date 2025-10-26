@@ -105,6 +105,46 @@ class EnsembleScorer:
             "is_likely_bot": combined_score > (self.threshold * 100)
         }
     
+    def calculate_ensemble_score(self, scores: Dict[str, float]) -> Dict[str, Union[float, Dict]]:
+        """
+        Calculate ensemble score from individual model scores.
+        
+        Args:
+            scores: Dictionary of model scores
+            
+        Returns:
+            Ensemble score and confidence
+        """
+        # Calculate weighted average
+        total_score = 0.0
+        total_weight = 0.0
+        
+        for model_name, score in scores.items():
+            weight = self.weights.get(model_name, 0.0)
+            total_score += score * weight
+            total_weight += weight
+        
+        # Normalize if weights don't sum to 1
+        if total_weight > 0:
+            ensemble_score = total_score / total_weight
+        else:
+            ensemble_score = sum(scores.values()) / len(scores)
+        
+        # Calculate confidence based on score consistency
+        if len(scores) > 1:
+            score_values = list(scores.values())
+            variance = sum((x - ensemble_score) ** 2 for x in score_values) / len(score_values)
+            confidence = max(0, 100 - (variance * 100))
+        else:
+            confidence = 80.0  # Default confidence for single model
+        
+        return {
+            "ensemble_score": ensemble_score,
+            "confidence": confidence,
+            "breakdown": scores,
+            "is_likely_bot": ensemble_score > (self.threshold * 100)
+        }
+    
     def combine_all_signals(self, 
                            fast_result: AnalysisResult,
                            deep_result: Optional[AnalysisResult] = None,
