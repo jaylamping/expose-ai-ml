@@ -90,7 +90,7 @@ class ExposeAPI:
         async def health_check():
             return {"status": "healthy", "initialized": self._initialized}
         
-        @self.app.post("/api/v1/analyze-user-comments", response_model=AnalyzeUserResponse)
+        @self.app.post("/api/v1/analyze/user", response_model=AnalyzeUserResponse)
         async def analyze_user(request: AnalyzeUserRequest):
             """Analyze a user's comments for bot detection."""
             try:
