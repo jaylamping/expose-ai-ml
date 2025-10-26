@@ -6,7 +6,6 @@ import torch
 import onnxruntime as ort
 import numpy as np
 from typing import Dict, Any, Optional, Union, List
-from pathlib import Path
 
 from .device_manager import DeviceManager
 from config.settings import settings

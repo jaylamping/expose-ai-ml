@@ -4,7 +4,6 @@ Test script for the bot detection API.
 Run this to verify the API is working correctly.
 """
 import requests
-import json
 import time
 
 def test_api():
@@ -61,7 +60,7 @@ def test_api():
         print("   📤 Sending test request...")
         start_time = time.time()
         response = requests.post(
-            f"{base_url}/api/v1/analyze-user",
+            f"{base_url}/api/v1/analyze-user-comments",
             json=test_request,
             timeout=30
         )
@@ -103,8 +102,8 @@ def test_api():
     print("\n" + "=" * 40)
     print("🎉 API testing completed!")
     print("📱 Your browser extension can now connect to:")
-    print(f"   • http://localhost:8000")
-    print(f"   • http://0.0.0.0:8000")
+    print("   • http://localhost:8000")
+    print("   • http://0.0.0.0:8000")
     return True
 
 if __name__ == "__main__":

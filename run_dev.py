@@ -3,9 +3,7 @@
 Development server for bot detection API.
 Optimized for local development and testing.
 """
-import os
-import sys
-from api.bot_detection import BotDetectionAPI
+from api.expose import ExposeAPI
 
 def main():
     """Run the development server."""
@@ -17,7 +15,7 @@ def main():
     port = 8000
     debug = True
     
-    print(f"📍 Server will be available at:")
+    print("📍 Server will be available at:")
     print(f"   • Local: http://localhost:{port}")
     print(f"   • Network: http://0.0.0.0:{port}")
     print(f"   • API Docs: http://localhost:{port}/docs")
@@ -28,7 +26,7 @@ def main():
     print("=" * 50)
     
     # Initialize and run API
-    api = BotDetectionAPI()
+    api = ExposeAPI()
     api.run(host=host, port=port, debug=debug)
 
 if __name__ == "__main__":

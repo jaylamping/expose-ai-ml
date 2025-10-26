@@ -1,11 +1,10 @@
 """
 LangChain integration with Ollama for local LLM applications.
 """
-from typing import Dict, Optional, List, Union, Protocol, runtime_checkable
+from typing import Dict, Optional, List, Protocol, runtime_checkable
 from langchain_ollama import OllamaLLM
-from langchain_community.embeddings import OllamaEmbeddings
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.messages import BaseMessage
+from langchain_core.prompts import PromptTemplate
 from langchain_core.callbacks.base import BaseCallbackHandler
 
 from config.settings import settings

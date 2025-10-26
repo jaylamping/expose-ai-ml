@@ -52,7 +52,7 @@ class AnalysisResponse(BaseModel):
     explanation: Optional[str] = Field(None, description="Human-readable explanation")
 
 
-class BotDetectionAPI:
+class ExposeAPI:
     """Main API class for bot detection."""
     
     def __init__(self):
@@ -87,8 +87,8 @@ class BotDetectionAPI:
         async def health_check():
             return {"status": "healthy", "initialized": self._initialized}
         
-        @self.app.post("/api/v1/analyze-user", response_model=AnalysisResponse)
-        async def analyze_user(request: AnalysisRequest):
+        @self.app.post("/api/v1/analyze-user-comments", response_model=AnalysisResponse)
+        async def analyze_user_comments(request: AnalysisRequest):
             """Analyze a user's comments for bot detection."""
             try:
                 # Initialize models if not done yet
@@ -299,7 +299,7 @@ class BotDetectionAPI:
 
 
 # Global API instance
-api = BotDetectionAPI()
+api = ExposeAPI()
 
 # Export the FastAPI app for external use
 app = api.app
