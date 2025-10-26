@@ -1,4 +1,5 @@
 [tool.pytest.ini_options]
+addopts = "-s"
 filterwarnings = [
     "ignore::UserWarning",
     "ignore:.*builtin type.*has no __module__ attribute:DeprecationWarning"
