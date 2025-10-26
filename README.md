@@ -1,15 +1,18 @@
-# Expose AI ML Library
+# Bot Detection API
 
-A flexible Python library for machine learning with support for PyTorch, ONNX, and LangChain, designed for local development with easy Google Cloud deployment.
+A sophisticated multi-stage bot detection system for analyzing social media content, with a focus on Reddit comment analysis. Built with PyTorch, Transformers, and FastAPI for high-performance inference.
 
 ## Features
 
-- **PyTorch Support**: Train and run PyTorch models locally
-- **ONNX Integration**: Convert PyTorch models to ONNX for optimized inference
-- **LangChain Integration**: Build LLM applications with OpenAI, Anthropic, and Google models
-- **Google Cloud Ready**: Easy deployment to Google Cloud AI Platform
-- **Device Management**: Automatic GPU/CPU device selection
-- **Simple API**: Clean, intuitive interface for all ML operations
+- **Multi-Stage Detection Pipeline**: Fast screening → Deep analysis → Statistical analysis → Ensemble scoring
+- **Reddit-Optimized**: Specialized preprocessing for Reddit comments, markdown, URLs, and mentions
+- **High-Performance Models**: Uses RoBERTa and DeBERTa-v3-base for accurate bot detection
+- **Statistical Analysis**: Perplexity, BPC, sentiment consistency, embedding similarity, and more
+- **FastAPI Integration**: Production-ready REST API with automatic documentation
+- **ONNX Optimization**: Fast inference with ONNX Runtime for production deployment
+- **Smart Sampling**: Efficiently processes large comment sets with intelligent sampling
+- **Context Awareness**: Uses parent comment context for improved accuracy
+- **Confidence Scoring**: Provides confidence levels for all predictions
 
 ## Quick Start
 
@@ -20,130 +23,97 @@ A flexible Python library for machine learning with support for PyTorch, ONNX, a
 git clone https://github.com/jaylamping/expose-ai-ml.git
 cd expose-ai-ml
 
+# Create virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 # Install dependencies
 pip install -r requirements.txt
-
-# For GPU support (optional)
-pip install -r requirements.txt[gpu]
 ```
 
-### 2. Environment Setup
+### 2. Start the API Server
 
-Create a `.env` file in the project root:
+```bash
+# Development mode (recommended for testing)
+python run_dev.py
 
-```env
-# ML Framework Settings
-DEVICE=auto
-MODEL_CACHE_DIR=./models/cache
-
-# Google Cloud Settings (for future deployment)
-GCP_PROJECT_ID=your-project-id
-GCP_REGION=us-central1
-
-# LangChain API Keys
-OPENAI_API_KEY=your-openai-key
-ANTHROPIC_API_KEY=your-anthropic-key
-GOOGLE_API_KEY=your-google-key
+# Or run directly
+python api/bot_detection.py
 ```
 
-### 3. Basic Usage
+The API will be available at:
+
+- **Local**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+
+### 3. Test the API
+
+```bash
+# Run the test script
+python test_api.py
+```
+
+### 4. Basic Usage
 
 ```python
-from core.framework import MLFramework
-from llm.chain import LLMChain
+import requests
 
-# Initialize ML Framework
-ml_framework = MLFramework()
+# Analyze a user's comments
+response = requests.post("http://localhost:8000/api/v1/analyze-user", json={
+    "user_id": "reddit_username",
+    "comments": [
+        "This is a great post!",
+        "I completely agree with your point.",
+        "Thanks for sharing this information."
+    ],
+    "options": {
+        "fast_only": False,
+        "include_breakdown": True,
+        "use_context": True
+    }
+})
 
-# Load a PyTorch model
-model = ml_framework.load_pytorch_model("model.pth", "my_model")
-
-# Convert to ONNX for faster inference
-ml_framework.convert_pytorch_to_onnx(
-    model,
-    input_shape=(1, 784),
-    output_path="model.onnx"
-)
-
-# Load ONNX model
-ml_framework.load_onnx_model("model.onnx", "my_onnx_model")
-
-# Make predictions
-input_data = torch.randn(1, 784)
-pytorch_result = ml_framework.predict_pytorch("my_model", input_data)
-onnx_result = ml_framework.predict_onnx("my_onnx_model", input_data)
-
-# Use LangChain for LLM applications
-llm_chain = LLMChain(provider="openai")
-chain = llm_chain.create_chain(
-    template="Summarize this text: {text}",
-    input_variables=["text"]
-)
-result = llm_chain.predict("Your text here", chain_name="default")
+result = response.json()
+print(f"Bot Score: {result['bot_score']}%")
+print(f"Confidence: {result['confidence']}%")
+print(f"Is Bot: {result['is_likely_bot']}")
 ```
-
-## Runtime Recommendations
-
-### For Your Use Case (Local → Google Cloud):
-
-**Primary: PyTorch**
-
-- Best for development and training
-- Excellent debugging capabilities
-- Native Google Cloud support
-- Easy to export to ONNX
-
-**Secondary: ONNX**
-
-- Use for production inference
-- Better performance and smaller models
-- Cross-platform compatibility
-- Easy deployment to edge devices
-
-**Hybrid Approach:**
-
-1. Develop and train with PyTorch
-2. Export to ONNX for production
-3. Use LangChain for LLM applications
-4. Deploy everything to Google Cloud
 
 ## Project Structure
 
 ```
 expose-ai-ml/
-├── core/                 # Core ML framework
-│   ├── framework.py     # Main ML framework class
-│   └── device_manager.py # Device management
-├── llm/                 # LangChain integration
-│   ├── chain.py        # LLM chain wrapper
-│   ├── embeddings.py   # Embedding management
-│   └── prompts.py      # Pre-built prompts
-├── config/             # Configuration
-│   └── settings.py     # Settings management
-├── api/                # API endpoints (future)
-├── models/             # Model storage
-├── example.py          # Usage example
-├── requirements.txt    # Dependencies
-└── setup.py           # Package setup
+├── api/                    # Bot Detection API
+│   └── bot_detection.py   # FastAPI server and endpoints
+├── models/                 # Bot detection models
+│   ├── detectors/         # Detection algorithms
+│   │   ├── fast_detector.py      # Fast screening (RoBERTa)
+│   │   ├── deep_detector.py      # Deep analysis (DeBERTa-v3)
+│   │   └── statistical_analyzer.py # Statistical metrics
+│   ├── ensemble.py        # Ensemble scoring system
+│   └── training/          # Model training utilities
+├── utils/                  # Utilities
+│   ├── preprocessing.py   # Reddit comment preprocessing
+│   └── metrics.py         # Analysis metrics and tools
+├── config/                # Configuration
+│   └── settings.py        # Application settings
+├── core/                  # Core framework (legacy)
+│   ├── framework.py       # ML framework (basic implementation)
+│   └── device_manager.py  # Device management
+├── llm/                   # LangChain integration (basic)
+│   ├── chain.py          # LLM chain wrapper
+│   ├── embeddings.py     # Embedding management
+│   └── prompts.py        # Pre-built prompts
+├── run_dev.py            # Development server launcher
+├── test_api.py           # API testing script
+├── requirements.txt      # Dependencies
+└── setup.py             # Package setup
 ```
 
-## Bot Detection API
+## API Reference
 
-The library now includes a sophisticated multi-stage bot detection system for analyzing social media content.
-
-### Quick Start with Bot Detection
-
-```python
-from api.bot_detection import BotDetectionAPI
-
-# Initialize the API
-api = BotDetectionAPI()
-
-# Start the server
-api.run(host="0.0.0.0", port=8000)
-```
-
-### API Usage
+### Request Format
 
 **Endpoint**: `POST /api/v1/analyze-user`
 
@@ -196,16 +166,16 @@ api.run(host="0.0.0.0", port=8000)
 }
 ```
 
-### Multi-Stage Detection Pipeline
+### Detection Pipeline
 
-The bot detection system uses a sophisticated multi-stage approach:
+The system uses a sophisticated multi-stage approach:
 
 1. **Fast Screening** (200-300ms): Quick analysis using lightweight models
 2. **Deep Analysis** (1-2s): High-accuracy analysis using DeBERTa-v3-base
 3. **Statistical Analysis** (500ms-1s): Perplexity, BPC, sentiment consistency, embedding similarity
 4. **Ensemble Scoring**: Weighted combination of all signals
 
-### Features
+### Advanced Features
 
 - **Reddit-specific preprocessing**: Handles markdown, URLs, mentions, subreddits
 - **Smart sampling**: Efficiently processes large comment sets
@@ -215,44 +185,65 @@ The bot detection system uses a sophisticated multi-stage approach:
 - **Batch processing**: Optimized for processing multiple comments
 - **ONNX optimization**: Fast inference for production deployment
 
-### Training Custom Models
-
-```python
-from models.training.train_detector import BotDetectionTrainer
-
-# Initialize trainer
-trainer = BotDetectionTrainer(
-    model_name="microsoft/deberta-v3-base",
-    output_dir="./models/trained"
-)
-
-# Run full training pipeline
-model_path = trainer.run_full_training_pipeline()
-print(f"Model saved to: {model_path}")
-```
-
 ## Examples
 
-Run the example to see the library in action:
+### Start the Development Server
 
 ```bash
-python example.py
-```
+# Start with development settings (recommended)
+python run_dev.py
 
-Run the bot detection API:
-
-```bash
+# Or start directly
 python api/bot_detection.py
 ```
 
-## Google Cloud Deployment
+### Test the API
 
-When ready to deploy to Google Cloud:
+```bash
+# Run comprehensive API tests
+python test_api.py
+```
 
-1. Set up your GCP project and credentials
-2. Use the built-in Google Cloud integration
-3. Deploy models to AI Platform
-4. Scale with Cloud Run or Kubernetes
+### API Endpoints
+
+- **Health Check**: `GET /health`
+- **Root Info**: `GET /`
+- **Analyze User**: `POST /api/v1/analyze-user`
+- **Models Info**: `GET /api/v1/models/info`
+- **API Documentation**: `GET /docs` (Swagger UI)
+
+## Performance & Deployment
+
+### Performance Characteristics
+
+- **Fast Mode**: 200-300ms per analysis (lightweight models)
+- **Full Analysis**: 1-2 seconds per analysis (comprehensive pipeline)
+- **Memory Usage**: ~2-4GB RAM (depending on models loaded)
+- **GPU Support**: Automatic GPU detection and utilization
+
+### Production Deployment
+
+The API is built with FastAPI and can be deployed using:
+
+- **Docker**: Containerize the application
+- **Cloud Run**: Serverless deployment on Google Cloud
+- **Kubernetes**: Scalable container orchestration
+- **Traditional VPS**: Direct deployment on virtual servers
+
+### Environment Variables
+
+```env
+# Device configuration
+DEVICE=auto  # or cuda, cpu
+
+# Model cache directory
+MODEL_CACHE_DIR=./models/cache
+
+# API settings
+API_HOST=0.0.0.0
+API_PORT=8000
+API_DEBUG=false
+```
 
 ## Contributing
 

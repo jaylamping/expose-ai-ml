@@ -3,7 +3,7 @@ FastAPI endpoint for multi-stage bot detection pipeline.
 """
 import time
 from typing import List, Dict, Optional, Any
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import uvicorn
 
