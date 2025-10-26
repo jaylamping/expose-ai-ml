@@ -2,5 +2,8 @@
 addopts = "-s"
 filterwarnings = [
     "ignore::UserWarning",
-    "ignore:.*builtin type.*has no __module__ attribute:DeprecationWarning"
+    "ignore:.*builtin type.*has no __module__ attribute:DeprecationWarning",
+    "ignore:.*Some weights of the model checkpoint.*were not used.*",
+    "ignore:.*This IS expected if you are initializing.*",
+    "ignore:.*sentencepiece tokenizer.*byte fallback.*"
 ]

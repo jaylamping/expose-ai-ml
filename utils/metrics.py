@@ -10,6 +10,10 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline  # pyrigh
 
 # Suppress sentencepiece tokenizer conversion warning
 warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
+
+# Suppress RoBERTa model weight warnings
+warnings.filterwarnings("ignore", message=".*Some weights of the model checkpoint.*were not used.*")
+warnings.filterwarnings("ignore", message=".*This IS expected if you are initializing.*")
 from sentence_transformers import SentenceTransformer  # pyright: ignore[reportMissingImports]
 import textstat  # pyright: ignore[reportMissingImports]
 from core.device_manager import DeviceManager

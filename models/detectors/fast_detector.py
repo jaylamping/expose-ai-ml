@@ -10,6 +10,10 @@ import time
 
 # Suppress sentencepiece tokenizer conversion warning
 warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
+
+# Suppress RoBERTa model weight warnings
+warnings.filterwarnings("ignore", message=".*Some weights of the model checkpoint.*were not used.*")
+warnings.filterwarnings("ignore", message=".*This IS expected if you are initializing.*")
 from pathlib import Path
 
 from config.settings import settings
