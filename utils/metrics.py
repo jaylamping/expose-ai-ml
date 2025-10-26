@@ -4,16 +4,25 @@ Statistical metrics for bot detection including perplexity and BPC calculations.
 import math
 import warnings
 import numpy as np
+import os
 from typing import List, Dict, Optional
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline  # pyright: ignore[reportMissingImports]
 
-# Suppress sentencepiece tokenizer conversion warning
-warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
+# Set environment variable to suppress transformers warnings
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
 
-# Suppress RoBERTa model weight warnings
+# Suppress all transformers warnings before importing
+warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", module="transformers")
 warnings.filterwarnings("ignore", message=".*Some weights of the model checkpoint.*were not used.*")
 warnings.filterwarnings("ignore", message=".*This IS expected if you are initializing.*")
+warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
+warnings.filterwarnings("ignore", message=".*roberta.pooler.*")
+
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline  # pyright: ignore[reportMissingImports]
 from sentence_transformers import SentenceTransformer  # pyright: ignore[reportMissingImports]
 import textstat  # pyright: ignore[reportMissingImports]
 from core.device_manager import DeviceManager

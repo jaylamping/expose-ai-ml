@@ -10,12 +10,20 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-# Suppress sentencepiece tokenizer conversion warning
-warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
+# Set environment variable to suppress transformers warnings
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
 
-# Suppress RoBERTa model weight warnings
+# Comprehensive warning suppression - must be done before any imports
+warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", module="transformers")
 warnings.filterwarnings("ignore", message=".*Some weights of the model checkpoint.*were not used.*")
 warnings.filterwarnings("ignore", message=".*This IS expected if you are initializing.*")
+warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
+warnings.filterwarnings("ignore", message=".*roberta.pooler.*")
+warnings.filterwarnings("ignore", message=".*RobertaForSequenceClassification.*")
 
 import pytest
 import numpy as np
