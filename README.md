@@ -127,12 +127,122 @@ expose-ai-ml/
 └── setup.py           # Package setup
 ```
 
+## Bot Detection API
+
+The library now includes a sophisticated multi-stage bot detection system for analyzing social media content.
+
+### Quick Start with Bot Detection
+
+```python
+from api.bot_detection import BotDetectionAPI
+
+# Initialize the API
+api = BotDetectionAPI()
+
+# Start the server
+api.run(host="0.0.0.0", port=8000)
+```
+
+### API Usage
+
+**Endpoint**: `POST /api/v1/analyze-user`
+
+**Request Example**:
+
+```json
+{
+  "user_id": "reddit_username",
+  "comments": [
+    "This is a great post!",
+    "I completely agree with your point.",
+    "Thanks for sharing this information."
+  ],
+  "parent_contexts": [
+    { "comment_id": "c1", "parent": "Original post text" },
+    { "comment_id": "c2", "parent": null }
+  ],
+  "options": {
+    "fast_only": false,
+    "include_breakdown": true,
+    "use_context": true,
+    "force_full_analysis": false
+  }
+}
+```
+
+**Response Example**:
+
+```json
+{
+  "user_id": "reddit_username",
+  "bot_score": 73.5,
+  "confidence": 85.2,
+  "is_likely_bot": true,
+  "stage": "full_ensemble",
+  "processing_time_ms": 1834,
+  "comments_analyzed": 25,
+  "total_comments": 3,
+  "breakdown": {
+    "fast_model": 70.0,
+    "deep_model": 78.0,
+    "perplexity": 72.0,
+    "bpc": 74.0,
+    "sentiment_consistency": 80.0,
+    "embedding_similarity": 75.0,
+    "zero_shot": 65.0,
+    "burstiness": 70.0
+  },
+  "explanation": "Analysis using full_ensemble with high confidence (85.2%). Result: likely bot (73.5% bot score)."
+}
+```
+
+### Multi-Stage Detection Pipeline
+
+The bot detection system uses a sophisticated multi-stage approach:
+
+1. **Fast Screening** (200-300ms): Quick analysis using lightweight models
+2. **Deep Analysis** (1-2s): High-accuracy analysis using DeBERTa-v3-base
+3. **Statistical Analysis** (500ms-1s): Perplexity, BPC, sentiment consistency, embedding similarity
+4. **Ensemble Scoring**: Weighted combination of all signals
+
+### Features
+
+- **Reddit-specific preprocessing**: Handles markdown, URLs, mentions, subreddits
+- **Smart sampling**: Efficiently processes large comment sets
+- **Context awareness**: Uses parent comment context for better accuracy
+- **Multiple signals**: 10+ different analysis methods
+- **Confidence scoring**: Provides confidence levels for all predictions
+- **Batch processing**: Optimized for processing multiple comments
+- **ONNX optimization**: Fast inference for production deployment
+
+### Training Custom Models
+
+```python
+from models.training.train_detector import BotDetectionTrainer
+
+# Initialize trainer
+trainer = BotDetectionTrainer(
+    model_name="microsoft/deberta-v3-base",
+    output_dir="./models/trained"
+)
+
+# Run full training pipeline
+model_path = trainer.run_full_training_pipeline()
+print(f"Model saved to: {model_path}")
+```
+
 ## Examples
 
 Run the example to see the library in action:
 
 ```bash
 python example.py
+```
+
+Run the bot detection API:
+
+```bash
+python api/bot_detection.py
 ```
 
 ## Google Cloud Deployment
