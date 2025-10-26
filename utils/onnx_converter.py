@@ -7,7 +7,7 @@ import onnx
 import onnxruntime as ort
 from pathlib import Path
 from typing import Optional, Dict, Any, List
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForCausalLM  # pyright: ignore[reportMissingImports]
 import numpy as np
 
 from config.settings import settings
@@ -170,8 +170,6 @@ class ONNXConverter:
             Path to the converted ONNX model
         """
         print(f"🔄 Converting {model_name} to ONNX...")
-        
-        from transformers import AutoModelForCausalLM
         
         # Load model and tokenizer
         tokenizer = AutoTokenizer.from_pretrained(model_name)

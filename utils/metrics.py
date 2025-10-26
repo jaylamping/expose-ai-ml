@@ -5,9 +5,9 @@ import math
 import numpy as np
 from typing import List, Dict, Optional
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from sentence_transformers import SentenceTransformer
-import textstat
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline  # pyright: ignore[reportMissingImports]
+from sentence_transformers import SentenceTransformer  # pyright: ignore[reportMissingImports]
+import textstat  # pyright: ignore[reportMissingImports]
 from core.device_manager import DeviceManager
 
 
@@ -141,7 +141,6 @@ class SentimentAnalyzer:
         Args:
             model_name: Sentiment analysis model to use
         """
-        from transformers import pipeline
         self.sentiment_pipeline = pipeline(
             "sentiment-analysis",
             model=model_name,
@@ -340,7 +339,6 @@ class ZeroShotClassifier:
         Args:
             model_name: Zero-shot classification model to use
         """
-        from transformers import pipeline
         self.classifier = pipeline(
             "zero-shot-classification",
             model=model_name

@@ -3,7 +3,6 @@ Main ML framework class that orchestrates PyTorch and ONNX models.
 """
 import os
 import torch
-import onnx
 import onnxruntime as ort
 import numpy as np
 from typing import Dict, Any, Optional, Union, List

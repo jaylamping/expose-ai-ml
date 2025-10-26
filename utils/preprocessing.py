@@ -3,9 +3,9 @@ Reddit comment preprocessing and batch processing utilities.
 """
 import re
 import string
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict
 import numpy as np
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer  # pyright: ignore[reportMissingImports]
 
 
 class RedditPreprocessor:
