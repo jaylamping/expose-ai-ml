@@ -3,7 +3,7 @@ Ensemble scoring system for combining multiple bot detection signals.
 """
 import time
 import numpy as np
-from typing import Dict, List, Optional, Union, Any
+from typing import Dict, Optional, Union, Any
 from dataclasses import dataclass
 
 from config.settings import settings
