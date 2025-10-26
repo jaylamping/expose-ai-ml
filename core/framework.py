@@ -52,6 +52,22 @@ class MLFramework:
         self.models[model_name] = model
         return model
     
+    def register_pytorch_model(self, model: torch.nn.Module, model_name: str) -> torch.nn.Module:
+        """
+        Register a PyTorch model directly.
+        
+        Args:
+            model: PyTorch model to register
+            model_name: Name to register the model under
+            
+        Returns:
+            Registered PyTorch model
+        """
+        model = self.device_manager.to_device(model)
+        model.eval()
+        self.models[model_name] = model
+        return model
+    
     def load_onnx_model(self, model_path: str, model_name: str, providers: Optional[List[str]] = None) -> ort.InferenceSession:
         """
         Load an ONNX model.
@@ -102,19 +118,27 @@ class MLFramework:
             Path to the saved ONNX model
         """
         pytorch_model.eval()
-        dummy_input = torch.randn(input_shape).to(self.device_manager.get_device())
         
-        torch.onnx.export(
-            pytorch_model,
-            dummy_input,
-            output_path,
-            input_names=input_names or ['input'],
-            output_names=output_names or ['output'],
-            export_params=True,
-            opset_version=11,
-            do_constant_folding=True,
-            **kwargs
-        )
+        # Move model to CPU for ONNX export (ONNX export works better with CPU)
+        original_device = next(pytorch_model.parameters()).device
+        pytorch_model_cpu = pytorch_model.to('cpu')
+        dummy_input = torch.randn(input_shape)
+        
+        try:
+            torch.onnx.export(
+                pytorch_model_cpu,
+                dummy_input,
+                output_path,
+                input_names=input_names or ['input'],
+                output_names=output_names or ['output'],
+                export_params=True,
+                opset_version=18,
+                do_constant_folding=True,
+                **kwargs
+            )
+        finally:
+            # Move model back to original device
+            pytorch_model.to(original_device)
         
         return output_path
     

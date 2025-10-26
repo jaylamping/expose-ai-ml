@@ -2,7 +2,7 @@
 LangChain integration with Ollama for local LLM applications.
 """
 from typing import Dict, Optional, List, Union, Protocol, runtime_checkable
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
@@ -120,7 +120,7 @@ class LLMChain:
     
     def _create_llm(self, **kwargs) -> LLMProtocol:
         """Create the Ollama LLM instance."""
-        return Ollama(
+        return OllamaLLM(
             model=self.model_name,
             base_url=settings.ollama_base_url,
             temperature=self.temperature,

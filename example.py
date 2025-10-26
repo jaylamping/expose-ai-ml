@@ -25,6 +25,9 @@ def main():
         torch.nn.Linear(5, 1)
     )
     
+    # Register the PyTorch model
+    ml_framework.register_pytorch_model(model, "example_model")
+    
     # Convert to ONNX
     print("\n3. Converting PyTorch model to ONNX...")
     onnx_path = "example_model.onnx"
@@ -37,7 +40,7 @@ def main():
     
     # Load ONNX model
     print("\n4. Loading ONNX model...")
-    ml_framework.load_onnx_model(onnx_path, "example_model")
+    ml_framework.load_onnx_model(onnx_path, "example_onnx_model")
     
     # Make predictions
     print("\n5. Making predictions...")
@@ -48,7 +51,7 @@ def main():
     print(f"   PyTorch prediction: {pytorch_pred.item():.4f}")
     
     # ONNX prediction
-    onnx_pred = ml_framework.predict_onnx("example_model", test_input)
+    onnx_pred = ml_framework.predict_onnx("example_onnx_model", test_input)
     print(f"   ONNX prediction: {onnx_pred[0][0]:.4f}")
     
     # LangChain with Ollama Example
