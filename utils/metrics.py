@@ -8,7 +8,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from sentence_transformers import SentenceTransformer
 import textstat
-from scipy import stats
+from core.device_manager import DeviceManager
 
 
 class PerplexityCalculator:
@@ -23,12 +23,13 @@ class PerplexityCalculator:
             device: Device to run the model on
         """
         self.model_name = model_name
-        self.device = device if device != "auto" else ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device_manager = DeviceManager(device)
+        self.device = str(self.device_manager.get_device())
         
         # Load model and tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(model_name)
-        self.model.to(self.device)
+        self.model = self.device_manager.to_device(self.model)
         self.model.eval()
         
         # Add padding token if not present

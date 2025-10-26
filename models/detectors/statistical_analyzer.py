@@ -4,10 +4,10 @@ Statistical analysis components for bot detection including perplexity, BPC, and
 import time
 import numpy as np
 from typing import List, Dict, Optional, Union
-import torch
 
 from config.settings import settings
 from utils.preprocessing import RedditPreprocessor
+from core.device_manager import DeviceManager
 from utils.metrics import (
     PerplexityCalculator, 
     BPCCalculator, 
@@ -28,7 +28,8 @@ class StatisticalAnalyzer:
         Args:
             device: Device to run models on
         """
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device_manager = DeviceManager(device)
+        self.device = str(self.device_manager.get_device())
         self.preprocessor = RedditPreprocessor(max_length=settings.max_sequence_length)
         
         # Initialize analyzers

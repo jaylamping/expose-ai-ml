@@ -10,6 +10,7 @@ from pathlib import Path
 
 from config.settings import settings
 from utils.preprocessing import RedditPreprocessor
+from core.device_manager import DeviceManager
 
 
 class FastDetector:
@@ -24,7 +25,8 @@ class FastDetector:
             device: Device to run the model on
         """
         self.model_name = model_name or settings.fast_model_name
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device_manager = DeviceManager(device)
+        self.device = str(self.device_manager.get_device())
         self.preprocessor = RedditPreprocessor(max_length=settings.max_sequence_length)
         
         # Initialize model components
@@ -42,7 +44,7 @@ class FastDetector:
             self.pipeline = pipeline(
                 "text-classification",
                 model=self.model_name,
-                device=0 if self.device == "cuda" else -1,
+                device=0 if "cuda" in self.device else -1,
                 return_all_scores=True
             )
             print(f"Loaded fast detector pipeline: {self.model_name}")
@@ -52,7 +54,7 @@ class FastDetector:
                 # Manual loading as fallback
                 self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
                 self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
-                self.model.to(self.device)
+                self.model = self.device_manager.to_device(self.model)
                 self.model.eval()
                 
                 # Add padding token if not present
