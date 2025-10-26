@@ -35,14 +35,13 @@ class UserComment(BaseComment):
     parent_comment: Optional[BaseComment] = Field(None, description="Parent comment")
     child_comment: Optional[BaseComment] = Field(None, description="Child comment")
 
-class UserCommentRequest(BaseModel):
+class AnalyzeUserRequest(BaseModel):
     """Request model for bot analysis."""
     user_id: str = Field(..., description="Reddit username or user ID")
     comments: List[UserComment] = Field(..., description="List of user comments to analyze")
     options: Optional[AnalysisOptions] = Field(default_factory=AnalysisOptions, description="Analysis options")
 
-
-class UserCommentResponse(BaseModel):
+class AnalyzeUserResponse(BaseModel):
     """Response model for bot analysis."""
     user_id: str
     bot_score: float = Field(..., description="Bot probability score (0-100)")
@@ -91,8 +90,8 @@ class ExposeAPI:
         async def health_check():
             return {"status": "healthy", "initialized": self._initialized}
         
-        @self.app.post("/api/v1/analyze-user-comments", response_model=UserCommentResponse)
-        async def analyze_user_comments(request: UserCommentRequest):
+        @self.app.post("/api/v1/analyze-user-comments", response_model=AnalyzeUserResponse)
+        async def analyze_user(request: AnalyzeUserRequest):
             """Analyze a user's comments for bot detection."""
             try:
                 # Initialize models if not done yet
@@ -112,7 +111,7 @@ class ExposeAPI:
                 # Run analysis
                 result = await self._analyze_user_comments(request)
                 
-                return UserCommentResponse(**result)
+                return AnalyzeUserResponse(**result)
                 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
@@ -164,7 +163,7 @@ class ExposeAPI:
             print(f"Failed to initialize models: {e}")
             raise e
     
-    async def _analyze_user_comments(self, request: UserCommentRequest) -> UserCommentResponse:
+    async def _analyze_user_comments(self, request: AnalyzeUserRequest) -> AnalyzeUserResponse:
         """Analyze user comments using the multi-stage pipeline."""
         start_time = time.time()
         
@@ -190,7 +189,7 @@ class ExposeAPI:
                 "explanation": self.ensemble_scorer.get_confidence_explanation(result)
             })
             
-            return result
+            return AnalyzeUserResponse(**result)
         
         # Stage 2: Deep analysis
         print(f"Stage 2: Deep analysis for user {request.user_id}")
@@ -219,7 +218,7 @@ class ExposeAPI:
         
         return result
     
-    async def _run_fast_analysis(self, request: UserCommentRequest) -> AnalysisResult:
+    async def _run_fast_analysis(self, request: AnalyzeUserRequest) -> AnalysisResult:
         """Run fast screening analysis."""
         start_time = time.time()
         
@@ -245,7 +244,7 @@ class ExposeAPI:
             should_skip_next=analysis_result.get("should_skip_deep", False)
         )
     
-    async def _run_deep_analysis(self, request: UserCommentRequest) -> AnalysisResult:
+    async def _run_deep_analysis(self, request: AnalyzeUserRequest) -> AnalysisResult:
         """Run deep analysis."""
         start_time = time.time()
         
@@ -269,7 +268,7 @@ class ExposeAPI:
             breakdown=analysis_result
         )
     
-    async def _run_statistical_analysis(self, request: UserCommentRequest) -> Dict[str, Any]:
+    async def _run_statistical_analysis(self, request: AnalyzeUserRequest) -> AnalysisResult:
         """Run statistical analysis."""
         start_time = time.time()
         
