@@ -1,4 +1,4 @@
-# Bot Detection API
+# Expose.API
 
 A sophisticated multi-stage bot detection system for analyzing social media content, with a focus on Reddit comment analysis. Built with PyTorch, Transformers, and FastAPI for high-performance inference.
 
