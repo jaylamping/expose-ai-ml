@@ -58,10 +58,16 @@ class FastDetector:
         """Load the model and tokenizer."""
         try:
             # Try to load as pipeline first (simpler)
+            # Use appropriate device: GPU on PC, CPU on macOS to avoid MPS bus errors
+            if "cuda" in self.device:
+                device_id = 0  # Use GPU on PC
+            else:
+                device_id = -1  # Use CPU on macOS to avoid MPS issues
+            
             self.pipeline = pipeline(
                 "text-classification",
                 model=self.model_name,
-                device=0 if "cuda" in self.device else -1,
+                device=device_id,
                 top_k=None
             )
             print(f"Loaded fast detector pipeline: {self.model_name}")
