@@ -2,7 +2,7 @@
 Pre-built prompt templates for common use cases.
 """
 from typing import Dict, Any
-from langchain.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
 
 class PromptTemplates:

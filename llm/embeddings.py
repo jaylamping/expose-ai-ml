@@ -3,9 +3,9 @@ Embedding management with Ollama for local embeddings.
 """
 import numpy as np
 from typing import List, Union, Optional, Dict, Any
-from langchain.embeddings import OllamaEmbeddings
-from langchain.vectorstores import FAISS, Chroma
-from langchain.schema import Document
+from langchain_community.embeddings import OllamaEmbeddings
+from langchain_community.vectorstores import FAISS, Chroma
+from langchain_core.documents import Document
 
 from config.settings import settings
 

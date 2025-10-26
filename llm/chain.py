@@ -1,16 +1,94 @@
 """
 LangChain integration with Ollama for local LLM applications.
 """
-from typing import Dict, Any, Optional, List, Union
-from langchain.llms import Ollama
-from langchain.embeddings import OllamaEmbeddings
-from langchain.schema import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langchain.prompts import PromptTemplate, ChatPromptTemplate
-from langchain.chains import LLMChain as LangChainLLMChain
-from langchain.memory import ConversationBufferMemory
-from langchain.callbacks.base import BaseCallbackHandler
+from typing import Dict, Optional, List, Union, Protocol, runtime_checkable
+from langchain_community.llms import Ollama
+from langchain_community.embeddings import OllamaEmbeddings
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.callbacks.base import BaseCallbackHandler
 
 from config.settings import settings
+
+
+@runtime_checkable
+class LLMProtocol(Protocol):
+    """Protocol for LLM-like objects."""
+    def __call__(self, text: str) -> str:
+        """Call the LLM with text input."""
+        ...
+
+
+@runtime_checkable
+class MemoryProtocol(Protocol):
+    """Protocol for memory-like objects."""
+    def clear(self) -> None:
+        """Clear the memory."""
+        ...
+    
+    @property
+    def chat_memory(self) -> 'ChatMemoryProtocol':
+        """Get chat memory."""
+        ...
+
+
+@runtime_checkable
+class ChatMemoryProtocol(Protocol):
+    """Protocol for chat memory objects."""
+    @property
+    def messages(self) -> List[BaseMessage]:
+        """Get messages."""
+        ...
+
+
+@runtime_checkable
+class ChainProtocol(Protocol):
+    """Protocol for chain-like objects."""
+    def __call__(self, input: str) -> str:
+        """Call the chain with input."""
+        ...
+
+
+class SimpleMemory:
+    """Simple memory implementation."""
+    def __init__(self):
+        self._messages: List[BaseMessage] = []
+    
+    def clear(self) -> None:
+        """Clear the memory."""
+        self._messages.clear()
+    
+    @property
+    def chat_memory(self) -> 'SimpleChatMemory':
+        """Get chat memory."""
+        return SimpleChatMemory(self._messages)
+
+
+class SimpleChatMemory:
+    """Simple chat memory implementation."""
+    def __init__(self, messages: List[BaseMessage]):
+        self._messages = messages
+    
+    @property
+    def messages(self) -> List[BaseMessage]:
+        """Get messages."""
+        return self._messages
+
+
+class SimpleChain:
+    """Simple chain implementation that follows ChainProtocol."""
+    def __init__(self, llm: LLMProtocol, prompt: PromptTemplate, memory: Optional[MemoryProtocol] = None):
+        self.llm = llm
+        self.prompt = prompt
+        self.memory = memory
+    
+    def __call__(self, input: str) -> str:
+        """Call the chain with input."""
+        # Format the prompt with input variables
+        formatted_prompt = self.prompt.format(input=input)
+        # Use the LLM directly
+        result = self.llm(formatted_prompt)
+        return result
 
 
 class LLMChain:
@@ -37,10 +115,10 @@ class LLMChain:
         self.num_predict = num_predict
         
         self.llm = self._create_llm(**kwargs)
-        self.memory = ConversationBufferMemory()
-        self.chains: Dict[str, LangChainLLMChain] = {}
+        self.memory = SimpleMemory()
+        self.chains: Dict[str, ChainProtocol] = {}
     
-    def _create_llm(self, **kwargs) -> LLM:
+    def _create_llm(self, **kwargs) -> LLMProtocol:
         """Create the Ollama LLM instance."""
         return Ollama(
             model=self.model_name,
@@ -55,7 +133,7 @@ class LLMChain:
                     template: str, 
                     chain_name: str = "default",
                     input_variables: Optional[List[str]] = None,
-                    use_memory: bool = False) -> LangChainLLMChain:
+                    use_memory: bool = False) -> ChainProtocol:
         """
         Create a new LLM chain with a prompt template.
         
@@ -75,12 +153,8 @@ class LLMChain:
         
         memory = self.memory if use_memory else None
         
-        chain = LangChainLLMChain(
-            llm=self.llm,
-            prompt=prompt,
-            memory=memory,
-            verbose=True
-        )
+        # Create a chain that follows the ChainProtocol
+        chain = SimpleChain(self.llm, prompt, memory)
         
         self.chains[chain_name] = chain
         return chain
@@ -104,7 +178,7 @@ class LLMChain:
             raise ValueError(f"Chain '{chain_name}' not found")
         
         chain = self.chains[chain_name]
-        result = chain.predict(input=input_text, **kwargs)
+        result = chain(input_text)
         return result
     
     def chat(self, 

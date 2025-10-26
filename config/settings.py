@@ -1,7 +1,6 @@
 """
 Configuration settings for the ML library.
 """
-import os
 from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings
