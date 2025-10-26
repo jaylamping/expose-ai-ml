@@ -200,6 +200,8 @@ class TestEnsembleScorer:
     
     def test_combine_fast_and_deep(self):
         """Test combining fast and deep model scores."""
+        print("Testing fast and deep model combination...")
+        
         # Create AnalysisResult objects
         fast_result = AnalysisResult(
             stage="fast",
@@ -216,6 +218,17 @@ class TestEnsembleScorer:
         
         result = self.scorer.combine_fast_and_deep(fast_result, deep_result)
         
+        print(f'\nFast and Deep Combination Test Results:')
+        print(f'Fast result: bot_score={fast_result.bot_score}, confidence={fast_result.confidence}')
+        print(f'Deep result: bot_score={deep_result.bot_score}, confidence={deep_result.confidence}')
+        print(f'Combined bot score: {result["bot_score"]:.3f}')
+        print(f'Combined confidence: {result["confidence"]:.3f}')
+        print(f'Stage: {result["stage"]}')
+        print(f'Processing time: {result["processing_time_ms"]:.1f}ms')
+        print(f'Is likely bot: {result["is_likely_bot"]}')
+        print(f'Breakdown: {result["breakdown"]}')
+        print('Fast and deep combination test completed successfully!')
+        
         assert isinstance(result, dict)
         assert 'bot_score' in result
         assert 'confidence' in result
@@ -224,6 +237,8 @@ class TestEnsembleScorer:
     
     def test_calculate_ensemble_score(self):
         """Test ensemble score calculation."""
+        print("Testing ensemble score calculation...")
+        
         scores = {
             'fast_model': 0.8,
             'deep_model': 0.7,
@@ -232,6 +247,14 @@ class TestEnsembleScorer:
         }
         
         result = self.scorer.calculate_ensemble_score(scores)
+        
+        print(f'\nEnsemble Score Test Results:')
+        print(f'Input scores: {scores}')
+        print(f'Ensemble score: {result["ensemble_score"]:.3f}')
+        print(f'Confidence: {result["confidence"]:.3f}')
+        print(f'Is likely bot: {result["is_likely_bot"]}')
+        print(f'Breakdown: {result["breakdown"]}')
+        print('Ensemble score test completed successfully!')
         
         assert isinstance(result, dict)
         assert 'ensemble_score' in result
@@ -248,6 +271,8 @@ class TestBotDetectionAPI:
     @pytest.mark.asyncio
     async def test_full_analysis_integration(self):
         """Test full bot detection analysis integration."""
+        print("Running Full Analysis Integration Test...")
+        
         # Create test comments with mix of human and bot-like content
         test_comments = [
             'This is a great post! I totally agree with your point of view.',
@@ -260,7 +285,7 @@ class TestBotDetectionAPI:
         request = AnalysisRequest(
             user_id='test_user',
             comments=test_comments,
-            options=AnalysisOptions()
+            options=AnalysisOptions(force_full_analysis=True)
         )
 
         # Initialize models
@@ -268,6 +293,20 @@ class TestBotDetectionAPI:
         
         # Run analysis
         result = await self.api._analyze_user_comments(request)
+        
+        print('\nFull Analysis Test Results:')
+        print(f'User ID: {result["user_id"]}')
+        print(f'Bot Score: {result["bot_score"]:.3f}')
+        print(f'Confidence: {result["confidence"]:.3f}')
+        print(f'Analysis Time: {result.get("processing_time_ms", 0)/1000:.2f}s')
+        print(f'Stage: {result.get("stage", "unknown")}')
+        print('\nBreakdown:')
+        for key, value in result["breakdown"].items():
+            if isinstance(value, float):
+                print(f'  {key}: {value:.3f}')
+            else:
+                print(f'  {key}: {value}')
+        print('\nFull analysis test completed successfully!')
         
         # Verify results
         assert isinstance(result, dict)
@@ -289,6 +328,8 @@ class TestBotDetectionAPI:
     @pytest.mark.asyncio
     async def test_fast_analysis_only(self):
         """Test fast analysis only mode."""
+        print("Running Fast Analysis Only Test...")
+        
         test_comments = [
             'This is clearly a bot comment.',
             'I am an AI assistant.'
@@ -306,11 +347,77 @@ class TestBotDetectionAPI:
         # Run analysis
         result = await self.api._analyze_user_comments(request)
         
+        print('\nFast Analysis Test Results:')
+        print(f'User ID: {result["user_id"]}')
+        print(f'Bot Score: {result["bot_score"]:.3f}')
+        print(f'Confidence: {result["confidence"]:.3f}')
+        print(f'Analysis Time: {result.get("processing_time_ms", 0)/1000:.2f}s')
+        print(f'Stage: {result.get("stage", "unknown")}')
+        print('\nBreakdown:')
+        for key, value in result["breakdown"].items():
+            if isinstance(value, float):
+                print(f'  {key}: {value:.3f}')
+            else:
+                print(f'  {key}: {value}')
+        print('\nFast analysis test completed successfully!')
+        
         # Verify results
         assert isinstance(result, dict)
         assert result['user_id'] == 'test_user_fast'
         assert 'bot_score' in result
         assert 'confidence' in result
+        assert result.get('stage') == 'fast_only'  # Verify it's actually fast-only mode
+
+    @pytest.mark.asyncio
+    async def test_detailed_integration_with_output(self):
+        """Test full bot detection with detailed output."""
+        print("Running Bot Detection Integration Test...")
+        
+        # Create test comments
+        test_comments = [
+            'This is a great post! I totally agree with your point of view.',
+            'As an AI, I cannot have personal opinions on this matter.',
+            'Thanks for sharing this information. Very helpful!',
+            'I am designed to be helpful and provide accurate information.',
+            'This is interesting. What do you think about the implications?'
+        ]
+
+        request = AnalysisRequest(
+            user_id='test_user',
+            comments=test_comments,
+            options=AnalysisOptions(force_full_analysis=True)
+        )
+
+        # Initialize models first
+        print('Initializing models...')
+        await self.api._initialize_models()
+        print('Models initialized successfully!')
+        
+        # Test the analysis
+        result = await self.api._analyze_user_comments(request)
+        
+        print('\nBot Detection Test Results:')
+        print(f'User ID: {result["user_id"]}')
+        print(f'Bot Score: {result["bot_score"]:.3f}')
+        print(f'Confidence: {result["confidence"]:.3f}')
+        print(f'Analysis Time: {result.get("processing_time_ms", 0)/1000:.2f}s')
+        print('\nBreakdown:')
+        for key, value in result["breakdown"].items():
+            if isinstance(value, float):
+                print(f'  {key}: {value:.3f}')
+            else:
+                print(f'  {key}: {value}')
+        print('\nIntegration test completed successfully!')
+        
+        # Assertions to make it a proper test
+        assert isinstance(result, dict)
+        assert 'user_id' in result
+        assert 'bot_score' in result
+        assert 'confidence' in result
+        assert 'breakdown' in result
+        assert result['user_id'] == 'test_user'
+        assert 0 <= result['bot_score'] <= 100
+        assert 0 <= result['confidence'] <= 100
 
 
 def test_aggregate_linguistic_features():
