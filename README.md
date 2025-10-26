@@ -6,8 +6,8 @@ A sophisticated multi-stage bot detection system for analyzing social media cont
 
 - **Multi-Stage Detection Pipeline**: Fast screening → Deep analysis → Statistical analysis → Ensemble scoring
 - **Reddit-Optimized**: Specialized preprocessing for Reddit comments, markdown, URLs, and mentions
-- **High-Performance Models**: Uses RoBERTa and DeBERTa-v3-base for accurate bot detection
-- **Statistical Analysis**: Perplexity, BPC, sentiment consistency, embedding similarity, and more
+- **High-Performance Models**: Uses [RoBERTa](https://huggingface.co/roberta-base) and [DeBERTa-v3-base](https://huggingface.co/microsoft/deberta-v3-base) for accurate bot detection
+- **Statistical Analysis**: [Perplexity](https://en.wikipedia.org/wiki/Perplexity), [BPC](https://bauwenst.github.io/posts/explainers/2024-07-29-Bits-per-character/), [sentiment consistency](https://arxiv.org/abs/1901.10059), [embedding similarity](https://arxiv.org/abs/1907.11692), and more
 - **FastAPI Integration**: Production-ready REST API with automatic documentation
 - **ONNX Optimization**: Fast inference with ONNX Runtime for production deployment
 - **Smart Sampling**: Efficiently processes large comment sets with intelligent sampling
