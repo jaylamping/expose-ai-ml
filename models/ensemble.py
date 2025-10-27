@@ -6,6 +6,8 @@ import numpy as np
 from typing import Dict, Optional, Union, Any
 from dataclasses import dataclass
 
+from utils.type_conversion import safe_numpy_std, convert_numpy_types
+
 from config.settings import settings
 from utils.metrics import calculate_ensemble_confidence
 
@@ -62,7 +64,7 @@ class EnsembleScorer:
         
         # If no deep result, use fast result only
         if deep_result is None:
-            return {
+            result = {
                 "bot_score": fast_result.bot_score,
                 "confidence": fast_result.confidence,
                 "stage": "fast_only",
@@ -73,6 +75,9 @@ class EnsembleScorer:
                 },
                 "is_likely_bot": fast_result.bot_score > (self.threshold * 100)
             }
+            
+            # Convert numpy types to native Python types
+            return convert_numpy_types(result)
         
         # Combine fast and deep results
         fast_weight = self.weights.get("fast_model", 0.25)
@@ -93,7 +98,7 @@ class EnsembleScorer:
         
         processing_time = (time.time() - start_time) * 1000 + fast_result.processing_time_ms + deep_result.processing_time_ms
         
-        return {
+        result = {
             "bot_score": combined_score,
             "confidence": combined_confidence,
             "stage": "fast_and_deep",
@@ -104,6 +109,9 @@ class EnsembleScorer:
             },
             "is_likely_bot": combined_score > (self.threshold * 100)
         }
+        
+        # Convert numpy types to native Python types
+        return convert_numpy_types(result)
     
     def calculate_ensemble_score(self, scores: Dict[str, float]) -> Dict[str, Union[float, Dict]]:
         """
@@ -138,12 +146,15 @@ class EnsembleScorer:
         else:
             confidence = 80.0  # Default confidence for single model
         
-        return {
+        result = {
             "ensemble_score": ensemble_score,
             "confidence": confidence,
             "breakdown": scores,
             "is_likely_bot": ensemble_score > (self.threshold * 100)
         }
+        
+        # Convert numpy types to native Python types
+        return convert_numpy_types(result)
     
     def combine_all_signals(self, 
                            fast_result: AnalysisResult,
@@ -205,7 +216,7 @@ class EnsembleScorer:
             "individual_scores": confidence_result["individual_scores"]
         }
         
-        return {
+        result = {
             "bot_score": final_score,
             "confidence": confidence_result["confidence"] * 100,
             "stage": "full_ensemble",
@@ -215,6 +226,9 @@ class EnsembleScorer:
             "score_variance": confidence_result["score_variance"],
             "agreement_score": confidence_result["confidence"]
         }
+        
+        # Convert numpy types to native Python types
+        return convert_numpy_types(result)
     
     def calculate_adaptive_weights(self, 
                                  fast_result: AnalysisResult,
@@ -255,7 +269,7 @@ class EnsembleScorer:
             
             # Calculate agreement among statistical signals
             if len(statistical_signals) > 1:
-                statistical_std = np.std(statistical_signals)
+                statistical_std = safe_numpy_std(statistical_signals)
                 if statistical_std < 0.1:  # High agreement
                     for key in ["perplexity", "bpc", "sentiment_consistency", "embedding_similarity"]:
                         if key in adaptive_weights:

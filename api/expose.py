@@ -15,6 +15,7 @@ from models.detectors.deep_detector import DeepDetector
 from models.detectors.statistical_analyzer import StatisticalAnalyzer
 from models.ensemble import EnsembleScorer, AnalysisResult
 from utils.preprocessing import RedditPreprocessor
+from utils.type_conversion import convert_numpy_types
 
 # Configure logging
 logging.basicConfig(
@@ -262,7 +263,8 @@ class ExposeAPI:
             total_time = (time.time() - start_time) * 1000
             logger.info(f"Full analysis complete for user {request.user_id} in {total_time:.1f}ms - Final bot score: {result.get('bot_score', 0):.3f}")
             
-            return result
+            # Convert numpy types to native Python types for JSON serialization
+            return convert_numpy_types(result)
             
         except Exception as e:
             logger.error(f"Error in _analyze_user_comments for user {request.user_id}: {str(e)}")

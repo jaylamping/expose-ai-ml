@@ -10,6 +10,8 @@ import traceback
 from typing import List, Dict, Optional, Union
 import time
 
+from utils.type_conversion import safe_numpy_mean, safe_numpy_std, convert_numpy_types
+
 # Configure logging for this module
 logger = logging.getLogger(__name__)
 
@@ -59,17 +61,23 @@ class FastDetector:
     
     def _load_model(self):
         """Load the model and tokenizer."""
+        import platform
+        
+        # Force CPU on macOS to avoid MPS bus errors
+        if platform.system() == "Darwin":  # macOS
+            print("macOS detected - forcing CPU usage to avoid MPS bus errors")
+            # Skip pipeline entirely on macOS and go straight to manual loading
+            self._load_manual_model()
+            return
+        
         try:
-            # Force CPU on macOS to avoid MPS bus errors
-            import platform
-            if platform.system() == "Darwin":  # macOS
-                device_id = -1  # Force CPU on macOS
-                print("macOS detected - forcing CPU usage to avoid MPS bus errors")
-            elif "cuda" in self.device:
+            # Try pipeline first on non-macOS systems
+            if "cuda" in self.device:
                 device_id = 0  # Use GPU on PC
             else:
                 device_id = -1  # Use CPU as fallback
             
+            print(f"Attempting to load pipeline with device_id: {device_id}")
             self.pipeline = pipeline(
                 "text-classification",
                 model=self.model_name,
@@ -79,27 +87,37 @@ class FastDetector:
             print(f"Loaded fast detector pipeline: {self.model_name} on device {device_id}")
         except Exception as e:
             print(f"Pipeline loading failed, trying manual loading: {e}")
-            try:
-                # Manual loading as fallback - force CPU on macOS
-                import platform
-                if platform.system() == "Darwin":  # macOS
-                    print("macOS detected - forcing CPU usage for manual loading")
-                    self.device = "cpu"
-                    self.device_manager = DeviceManager("cpu")
-                
-                self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-                self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
-                self.model = self.device_manager.to_device(self.model)
-                self.model.eval()
-                
-                # Add padding token if not present
-                if self.tokenizer.pad_token is None:
-                    self.tokenizer.pad_token = self.tokenizer.eos_token
-                
-                print(f"Loaded fast detector manually: {self.model_name} on {self.device}")
-            except Exception as e2:
-                print(f"Failed to load fast detector: {e2}")
-                raise e2
+            self._load_manual_model()
+    
+    def _load_manual_model(self):
+        """Load model manually (used on macOS or as fallback)."""
+        import platform
+        
+        try:
+            # Force CPU on macOS
+            if platform.system() == "Darwin":  # macOS
+                print("macOS detected - forcing CPU usage for manual loading")
+                self.device = "cpu"
+                self.device_manager = DeviceManager("cpu")
+            
+            print(f"Loading tokenizer: {self.model_name}")
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            
+            print(f"Loading model: {self.model_name}")
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
+            
+            print(f"Moving model to device: {self.device}")
+            self.model = self.device_manager.to_device(self.model)
+            self.model.eval()
+            
+            # Add padding token if not present
+            if self.tokenizer.pad_token is None:
+                self.tokenizer.pad_token = self.tokenizer.eos_token
+            
+            print(f"Loaded fast detector manually: {self.model_name} on {self.device}")
+        except Exception as e:
+            print(f"Failed to load fast detector manually: {e}")
+            raise e
     
     def predict_single(self, text: str) -> Dict[str, float]:
         """
@@ -295,9 +313,9 @@ class FastDetector:
             confidences = [pred["confidence"] for pred in predictions]
             
             # Calculate aggregate scores
-            mean_bot_prob = np.mean(bot_probs) if bot_probs else 0.0
-            mean_confidence = np.mean(confidences) if confidences else 0.0
-            std_bot_prob = np.std(bot_probs) if len(bot_probs) > 1 else 0.0
+            mean_bot_prob = safe_numpy_mean(bot_probs)
+            mean_confidence = safe_numpy_mean(confidences)
+            std_bot_prob = safe_numpy_std(bot_probs)
             
             # Determine if we should skip deeper analysis
             should_skip_deep = (
@@ -308,7 +326,7 @@ class FastDetector:
             processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
             logger.debug(f"FastDetector: Analysis completed in {processing_time:.1f}ms - Bot score: {mean_bot_prob:.3f}, Confidence: {mean_confidence:.3f}")
             
-            return {
+            result = {
                 "bot_score": mean_bot_prob * 100,  # Convert to percentage
                 "confidence": mean_confidence * 100,
                 "should_skip_deep": should_skip_deep,
@@ -320,6 +338,9 @@ class FastDetector:
                 "model": self.model_name,
                 "stage": "fast_screening"
             }
+            
+            # Convert numpy types to native Python types
+            return convert_numpy_types(result)
             
         except Exception as e:
             logger.error(f"FastDetector: Error in analyze_user_comments: {str(e)}")

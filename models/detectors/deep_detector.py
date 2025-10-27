@@ -8,6 +8,8 @@ import os
 from typing import List, Dict, Optional, Union
 import time
 
+from utils.type_conversion import safe_numpy_mean, safe_numpy_std, convert_numpy_types
+
 # Set environment variable to suppress transformers warnings
 os.environ["TRANSFORMERS_VERBOSITY"] = "error"
 
@@ -302,9 +304,9 @@ class DeepDetector:
         confidences = [pred["confidence"] for pred in predictions]
         
         # Calculate aggregate scores
-        mean_bot_prob = np.mean(bot_probs) if bot_probs else 0.0
-        mean_confidence = np.mean(confidences) if confidences else 0.0
-        std_bot_prob = np.std(bot_probs) if len(bot_probs) > 1 else 0.0
+        mean_bot_prob = safe_numpy_mean(bot_probs)
+        mean_confidence = safe_numpy_mean(confidences)
+        std_bot_prob = safe_numpy_std(bot_probs)
         
         # Calculate additional metrics
         high_confidence_predictions = [p for p in bot_probs if p > 0.8 or p < 0.2]
@@ -312,7 +314,7 @@ class DeepDetector:
         
         processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
         
-        return {
+        result = {
             "bot_score": mean_bot_prob * 100,  # Convert to percentage
             "confidence": mean_confidence * 100,
             "processing_time_ms": processing_time,
@@ -324,6 +326,9 @@ class DeepDetector:
             "model": self.model_name,
             "stage": "deep_analysis"
         }
+        
+        # Convert numpy types to native Python types
+        return convert_numpy_types(result)
     
     def analyze_with_context(self, comments: List[str], parent_contexts: List[Dict]) -> Dict[str, Union[float, List, Dict]]:
         """
@@ -359,13 +364,13 @@ class DeepDetector:
         confidences = [pred["confidence"] for pred in predictions]
         
         # Calculate aggregate scores
-        mean_bot_prob = np.mean(bot_probs) if bot_probs else 0.0
-        mean_confidence = np.mean(confidences) if confidences else 0.0
-        std_bot_prob = np.std(bot_probs) if len(bot_probs) > 1 else 0.0
+        mean_bot_prob = safe_numpy_mean(bot_probs)
+        mean_confidence = safe_numpy_mean(confidences)
+        std_bot_prob = safe_numpy_std(bot_probs)
         
         processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
         
-        return {
+        result = {
             "bot_score": mean_bot_prob * 100,  # Convert to percentage
             "confidence": mean_confidence * 100,
             "processing_time_ms": processing_time,
@@ -377,6 +382,9 @@ class DeepDetector:
             "stage": "deep_analysis_with_context",
             "context_used": True
         }
+        
+        # Convert numpy types to native Python types
+        return convert_numpy_types(result)
     
     def get_model_info(self) -> Dict[str, str]:
         """Get information about the loaded model."""

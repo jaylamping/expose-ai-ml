@@ -6,6 +6,8 @@ import warnings
 import numpy as np
 from typing import List, Dict, Optional, Union
 
+from utils.type_conversion import safe_numpy_mean, safe_numpy_std, safe_numpy_max, safe_numpy_min, convert_numpy_types
+
 # Suppress sentencepiece tokenizer conversion warning
 warnings.filterwarnings("ignore", message=".*sentencepiece tokenizer.*byte fallback.*")
 
@@ -112,8 +114,8 @@ class StatisticalAnalyzer:
             if not valid_perplexities:
                 return {"mean_perplexity": 0.0, "perplexity_std": 0.0, "bot_signal": 0.0}
             
-            mean_perplexity = np.mean(valid_perplexities)
-            perplexity_std = np.std(valid_perplexities)
+            mean_perplexity = safe_numpy_mean(valid_perplexities)
+            perplexity_std = safe_numpy_std(valid_perplexities)
             
             # AI text typically has lower perplexity (more predictable)
             # Convert to bot signal (0-1, higher = more bot-like)
@@ -162,8 +164,8 @@ class StatisticalAnalyzer:
             if not bpc_scores:
                 return {"mean_bpc": 0.0, "bpc_std": 0.0, "bot_signal": 0.0}
             
-            mean_bpc = np.mean(bpc_scores)
-            bpc_std = np.std(bpc_scores)
+            mean_bpc = safe_numpy_mean(bpc_scores)
+            bpc_std = safe_numpy_std(bpc_scores)
             
             # AI text often has different information density
             # This is a heuristic - may need tuning based on data
@@ -286,8 +288,8 @@ class StatisticalAnalyzer:
             if not fk_scores:
                 return {"mean_flesch_kincaid": 0.0, "readability_std": 0.0, "bot_signal": 0.0}
             
-            mean_fk = np.mean(fk_scores)
-            fk_std = np.std(fk_scores)
+            mean_fk = safe_numpy_mean(fk_scores)
+            fk_std = safe_numpy_std(fk_scores)
             
             # AI text often has specific readability patterns
             # This is a heuristic - may need tuning
@@ -344,8 +346,8 @@ class StatisticalAnalyzer:
             if not ai_scores:
                 return {"mean_ai_score": 0.0, "ai_score_std": 0.0, "bot_signal": 0.0}
             
-            mean_ai_score = np.mean(ai_scores)
-            ai_score_std = np.std(ai_scores)
+            mean_ai_score = safe_numpy_mean(ai_scores)
+            ai_score_std = safe_numpy_std(ai_scores)
             
             # Direct bot signal from AI classification
             bot_signal = mean_ai_score
@@ -394,10 +396,10 @@ class StatisticalAnalyzer:
             em_dash_ratios = [em_dash / max(word, 1) for em_dash, word in zip(em_dash_counts, word_counts)]
             
             # Calculate means
-            mean_burstiness = np.mean(burstiness_scores)
-            mean_lexical_diversity = np.mean(lexical_diversity_scores)
-            mean_emoji_ratio = np.mean(emoji_ratios)
-            mean_em_dash_ratio = np.mean(em_dash_ratios)
+            mean_burstiness = safe_numpy_mean(burstiness_scores)
+            mean_lexical_diversity = safe_numpy_mean(lexical_diversity_scores)
+            mean_emoji_ratio = safe_numpy_mean(emoji_ratios)
+            mean_em_dash_ratio = safe_numpy_mean(em_dash_ratios)
             
             # Calculate bot signals
             # Lower burstiness = more bot-like (uniform sentence lengths)
@@ -469,7 +471,8 @@ class StatisticalAnalyzer:
         processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
         results["processing_time_ms"] = processing_time
         
-        return results
+        # Convert numpy types to native Python types
+        return convert_numpy_types(results)
     
     def get_available_analyzers(self) -> List[str]:
         """Get list of available analyzers."""
