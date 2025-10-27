@@ -106,7 +106,6 @@ class ExposeAPI:
         
         @self.app.post("/api/v1/analyze/user", response_model=AnalyzeUserResponse)
         async def analyze_user(request: AnalyzeUserRequest):
-            request.options.fast_only = True
             """Analyze a user's comments for bot detection."""
             logger.info(f"Starting analysis for user: {request.user_id}")
             logger.debug(f"Request details - Comments: {len(request.comments)}, Options: {request.options}")
