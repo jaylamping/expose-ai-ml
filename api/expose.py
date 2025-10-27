@@ -106,6 +106,7 @@ class ExposeAPI:
         
         @self.app.post("/api/v1/analyze/user", response_model=AnalyzeUserResponse)
         async def analyze_user(request: AnalyzeUserRequest):
+            request.options.fast_only = True
             """Analyze a user's comments for bot detection."""
             logger.info(f"Starting analysis for user: {request.user_id}")
             logger.debug(f"Request details - Comments: {len(request.comments)}, Options: {request.options}")
@@ -139,7 +140,7 @@ class ExposeAPI:
                 result = await self._analyze_user_comments(request)
                 logger.info(f"Analysis completed successfully for user: {request.user_id}")
                 
-                return AnalyzeUserResponse(**result)
+                return result
                 
             except HTTPException as e:
                 logger.error(f"HTTP Exception in analyze_user: {e.status_code} - {e.detail}")
