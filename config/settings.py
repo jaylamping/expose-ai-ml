@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     
     # Processing Settings
     max_comments_per_request: int = Field(default=100, description="Maximum comments to process per request")
-    batch_size: int = Field(default=32, description="Batch size for model inference")
+    batch_size: int = Field(default=25, description="Batch size for model inference")
     max_sequence_length: int = Field(default=512, description="Maximum token sequence length")
     
     model_config = {
