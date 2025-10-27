@@ -158,11 +158,14 @@ class SentimentAnalyzer:
         Args:
             model_name: Sentiment analysis model to use
         """
+        self.model_name = model_name
         self.sentiment_pipeline = pipeline(
             "sentiment-analysis",
             model=model_name,
             top_k=None
         )
+        # Load tokenizer for proper text truncation
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
     
     def analyze_sentiment(self, text: str) -> Dict[str, float]:
         """
@@ -178,7 +181,13 @@ class SentimentAnalyzer:
             return {"positive": 0.0, "negative": 0.0, "neutral": 0.0}
         
         try:
-            results = self.sentiment_pipeline(text)
+            # Truncate text using tokenizer to avoid tensor size mismatch errors
+            # Most sentiment models have a max length of 512 tokens
+            max_length = 500  # Leave some buffer
+            tokens = self.tokenizer.encode(text, add_special_tokens=True, max_length=max_length, truncation=True)
+            truncated_text = self.tokenizer.decode(tokens, skip_special_tokens=True)
+            
+            results = self.sentiment_pipeline(truncated_text)
             sentiment_scores = {}
             for result in results[0]:
                 sentiment_scores[result['label'].lower()] = result['score']
