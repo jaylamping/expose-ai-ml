@@ -60,12 +60,15 @@ class FastDetector:
     def _load_model(self):
         """Load the model and tokenizer."""
         try:
-            # Try to load as pipeline first (simpler)
-            # Use appropriate device: GPU on PC, CPU on macOS to avoid MPS bus errors
-            if "cuda" in self.device:
+            # Force CPU on macOS to avoid MPS bus errors
+            import platform
+            if platform.system() == "Darwin":  # macOS
+                device_id = -1  # Force CPU on macOS
+                print("macOS detected - forcing CPU usage to avoid MPS bus errors")
+            elif "cuda" in self.device:
                 device_id = 0  # Use GPU on PC
             else:
-                device_id = -1  # Use CPU on macOS to avoid MPS issues
+                device_id = -1  # Use CPU as fallback
             
             self.pipeline = pipeline(
                 "text-classification",
@@ -73,11 +76,17 @@ class FastDetector:
                 device=device_id,
                 top_k=None
             )
-            print(f"Loaded fast detector pipeline: {self.model_name}")
+            print(f"Loaded fast detector pipeline: {self.model_name} on device {device_id}")
         except Exception as e:
             print(f"Pipeline loading failed, trying manual loading: {e}")
             try:
-                # Manual loading as fallback
+                # Manual loading as fallback - force CPU on macOS
+                import platform
+                if platform.system() == "Darwin":  # macOS
+                    print("macOS detected - forcing CPU usage for manual loading")
+                    self.device = "cpu"
+                    self.device_manager = DeviceManager("cpu")
+                
                 self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
                 self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
                 self.model = self.device_manager.to_device(self.model)
@@ -87,7 +96,7 @@ class FastDetector:
                 if self.tokenizer.pad_token is None:
                     self.tokenizer.pad_token = self.tokenizer.eos_token
                 
-                print(f"Loaded fast detector manually: {self.model_name}")
+                print(f"Loaded fast detector manually: {self.model_name} on {self.device}")
             except Exception as e2:
                 print(f"Failed to load fast detector: {e2}")
                 raise e2

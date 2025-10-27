@@ -20,14 +20,24 @@ class DeviceManager:
     
     def _get_device(self, device: str) -> torch.device:
         """Get the appropriate torch device."""
+        import platform
+        
         if device == "auto":
             if torch.cuda.is_available():
                 return torch.device("cuda")
+            elif platform.system() == "Darwin":
+                # Force CPU on macOS to avoid MPS bus errors
+                print("macOS detected - using CPU to avoid MPS bus errors")
+                return torch.device("cpu")
             elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-                return torch.device("mps")  # Apple Silicon
+                return torch.device("mps")  # Apple Silicon (only if not macOS)
             else:
                 return torch.device("cpu")
         else:
+            # If explicitly requesting MPS on macOS, force CPU instead
+            if device == "mps" and platform.system() == "Darwin":
+                print("MPS requested on macOS - forcing CPU to avoid bus errors")
+                return torch.device("cpu")
             return torch.device(device)
     
     def to_device(self, model_or_tensor: Union[torch.nn.Module, torch.Tensor]) -> Union[torch.nn.Module, torch.Tensor]:
